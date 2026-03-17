@@ -13,22 +13,6 @@ SkillSwap es una plataforma diseñada para facilitar el intercambio de tutorías
 * *Frontend:* React / Next.js
 * *Backend:* Node.js / Express
 * *Base de Datos:* PostgreSQL / MongoDB
-## Base de Datos
-
-La base de datos del proyecto se encuentra en:
-
-database/skillswap_schema.sql
-
-Contiene las 25 tablas necesarias para gestionar:
-
-- usuarios
-- tutores
-- estudiantes
-- materias
-- tutorías
-- sistema de reputación
-- progreso académico
-
 ## Diagrama Entidad-Relación
 
 ![ER Diagram](diagrams/skillswap_ERD.png)
