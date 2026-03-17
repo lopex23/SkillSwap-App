@@ -15,4 +15,4 @@ SkillSwap es una plataforma diseñada para facilitar el intercambio de tutorías
 * *Base de Datos:* PostgreSQL / MongoDB
 ## Diagrama Entidad-Relación
 
-![ER Diagram](diagrams/skillswap_ERD.png)
+![ER Diagram](diagrams/skillswap_ERD.png.png)
