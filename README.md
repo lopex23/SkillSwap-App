@@ -15,4 +15,4 @@ SkillSwap es una plataforma diseñada para facilitar el intercambio de tutorías
 * *Base de Datos:* PostgreSQL / MongoDB
 ## Base de Datos
 
-La base de datos del proyecto se encuentra en:
+La base de datos del proyecto se encuentra en:database/skillswap_schema.sql
