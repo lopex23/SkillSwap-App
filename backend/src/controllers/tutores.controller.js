@@ -1,5 +1,6 @@
 const Tutor = require('../models/tutor.model');
 const Materia = require('../models/materia.model');
+const Sesion = require('../models/sesion.model');
 const HttpError = require('../utils/httpError');
 const { texto, parseId, assertSinErrores } = require('../utils/validators');
 
@@ -30,6 +31,13 @@ async function obtener(req, res) {
   const tutor = await Tutor.buscarPorId(parseId(req.params.id));
   if (!tutor) throw new HttpError(404, 'Tutor no encontrado');
   res.json({ tutor });
+}
+
+// GET /api/tutores/:id/calificaciones  (anónimas)
+async function calificaciones(req, res) {
+  const id = parseId(req.params.id);
+  if (!(await Tutor.buscarPorId(id))) throw new HttpError(404, 'Tutor no encontrado');
+  res.json({ calificaciones: await Sesion.calificacionesDeTutor(id) });
 }
 
 // ---------- Materias del tutor autenticado ----------
@@ -101,6 +109,7 @@ async function quitarDisponibilidad(req, res) {
 module.exports = {
   listar,
   obtener,
+  calificaciones,
   misMaterias,
   agregarMateria,
   quitarMateria,
