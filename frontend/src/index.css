@@ -5,9 +5,14 @@
    ========================================================= */
 
 :root {
-  --primario: #4f46e5;
-  --primario-hover: #4338ca;
-  --primario-suave: #eef2ff;
+  /* Paleta basada en el logo: azul marino (principal), naranja (acento),
+     verde (éxito) y azul (información). Los tonos de texto son más oscuros
+     que los del logo para que se lean bien sobre fondo claro. */
+  --primario: #183060;
+  --primario-hover: #10224a;
+  --primario-suave: #e8eef8;
+  --acento: #a8490c;
+  --acento-suave: #fdf0e6;
   --texto: #111827;
   --texto-suave: #6b7280;
   --fondo: #f6f7fb;
@@ -15,13 +20,17 @@
   --borde: #e5e7eb;
   --peligro: #dc2626;
   --peligro-suave: #fef2f2;
-  --exito: #15803d;
-  --exito-suave: #f0fdf4;
-  --aviso: #b45309;
-  --aviso-suave: #fffbeb;
-  --info: #1d4ed8;
-  --info-suave: #eff6ff;
+  --exito: #1f7a4a;
+  --exito-suave: #eaf7ef;
+  --aviso: #a8540c;
+  --aviso-suave: #fff6e8;
+  --info: #2a5a8a;
+  --info-suave: #e8f0f8;
   --estrella: #f59e0b;
+  /* Colores del logo */
+  --marca-azul: #183060;
+  --marca-naranja: #f07830;
+  --marca-verde: #48c078;
   --sombra: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 8%);
   --radio: 12px;
   --radio-sm: 8px;
@@ -36,9 +45,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --primario: #818cf8;
-    --primario-hover: #a5b4fc;
-    --primario-suave: #1e1b4b;
+    --primario: #7fb0e8;
+    --primario-hover: #a3c6ef;
+    --primario-suave: #13233d;
+    --acento: #f59a5c;
+    --acento-suave: #2d1a0d;
     --texto: #f3f4f6;
     --texto-suave: #9ca3af;
     --fondo: #0b0f19;
@@ -46,13 +57,14 @@
     --borde: #262d3d;
     --peligro: #f87171;
     --peligro-suave: #2a1215;
-    --exito: #4ade80;
+    --exito: #5fd394;
     --exito-suave: #0f2417;
     --aviso: #fbbf24;
     --aviso-suave: #2a2010;
     --info: #93c5fd;
     --info-suave: #0f1d33;
     --sombra: 0 1px 2px rgb(0 0 0 / 40%);
+    --marca-azul: #dbe4f3;
     color-scheme: dark;
   }
 }
@@ -150,15 +162,50 @@ button {
   text-decoration: none;
 }
 
+/* Logo: ícono como imagen + "SkillSwap" como texto con los colores de la marca */
 .marca-logo {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--primario);
-  color: #fff;
-  font-size: 1.1rem;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.marca-texto {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.marca-skill {
+  color: var(--marca-azul);
+}
+
+.marca-swap {
+  background: linear-gradient(90deg, var(--marca-naranja), var(--marca-verde));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-logo {
+  width: 104px;
+  height: 104px;
+  object-fit: contain;
+}
+
+/* En modo oscuro el ícono va sobre una placa clara: sus partes azul marino
+   (persona y birrete) se perderían sobre el fondo oscuro. */
+@media (prefers-color-scheme: dark) {
+  .marca-logo,
+  .hero-logo {
+    background: #f3f6fb;
+    border-radius: 10px;
+    padding: 3px;
+  }
+
+  .hero-logo {
+    border-radius: 24px;
+    padding: 10px;
+  }
 }
 
 .nav {
@@ -713,7 +760,7 @@ a.item-titulo:hover {
 }
 
 .hero-eyebrow {
-  color: var(--primario);
+  color: var(--acento);
   font-weight: 600;
   font-size: 0.9rem;
   text-transform: uppercase;
@@ -753,8 +800,8 @@ a.item-titulo:hover {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--primario-suave);
-  color: var(--primario);
+  background: var(--acento-suave);
+  color: var(--acento);
   font-weight: 700;
 }
 
@@ -979,11 +1026,12 @@ a.item-titulo:hover {
   overflow: hidden;
 }
 
+/* Barras de afinidad y progreso con el degradado del logo */
 .match-barra span,
 .barra span {
   display: block;
   height: 100%;
-  background: var(--primario);
+  background: linear-gradient(90deg, var(--marca-naranja), var(--marca-verde));
   border-radius: 999px;
 }
 

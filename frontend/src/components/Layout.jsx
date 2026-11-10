@@ -41,8 +41,11 @@ export default function Layout() {
       <header className="cabecera">
         <div className="cabecera-inner">
           <Link to={usuario ? '/panel' : '/'} className="marca" onClick={() => setMenuAbierto(false)}>
-            <span className="marca-logo" aria-hidden="true">⇄</span>
-            SkillSwap
+            <img src="/logo-icono.png" alt="" className="marca-logo" width="36" height="36" />
+            <span className="marca-texto">
+              <span className="marca-skill">Skill</span>
+              <span className="marca-swap">Swap</span>
+            </span>
           </Link>
 
           {usuario ? (
