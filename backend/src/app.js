@@ -4,6 +4,7 @@ const authRoutes = require('./routes/auth.routes');
 const materiasRoutes = require('./routes/materias.routes');
 const tutoresRoutes = require('./routes/tutores.routes');
 const solicitudesRoutes = require('./routes/solicitudes.routes');
+const sesionesRoutes = require('./routes/sesiones.routes');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
       'POST|PUT|DELETE /api/materias/:id': 'Gestión de materias (administrador)',
       'GET /api/tutores?materia=ID': 'Tutores, opcionalmente de una materia (requiere token)',
       'GET /api/tutores/:id': 'Perfil de un tutor (requiere token)',
+      'GET /api/tutores/:id/calificaciones': 'Calificaciones anónimas del tutor (requiere token)',
       'GET|POST|DELETE /api/tutores/me/materias': 'Materias que enseña el tutor (tutor)',
       'GET|POST|DELETE /api/tutores/me/disponibilidad': 'Horarios del tutor (tutor)',
       'POST /api/solicitudes': 'Pedir una tutoría; calcula tutores sugeridos (estudiante)',
@@ -32,6 +34,12 @@ app.get('/', (req, res) => {
       'GET /api/solicitudes/:id': 'Detalle de una solicitud',
       'PATCH /api/solicitudes/:id/cancelar': 'Cancelar una solicitud pendiente (estudiante)',
       'POST /api/solicitudes/:id/aceptar': 'Aceptar y programar la sesión (tutor)',
+      'GET /api/sesiones/mias?estado=&rol=': 'Mis sesiones como tutor y/o estudiante',
+      'GET /api/sesiones/progreso': 'Sesiones completadas por materia (estudiante)',
+      'GET /api/sesiones/:id': 'Detalle de una sesión (participantes)',
+      'PATCH /api/sesiones/:id/completar': 'Marcar como completada (tutor asignado)',
+      'PATCH /api/sesiones/:id/cancelar': 'Cancelar una sesión programada (tutor o estudiante)',
+      'POST /api/sesiones/:id/calificar': 'Calificar de 1 a 5 una sesión completada (estudiante)',
     },
   });
 });
@@ -41,6 +49,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/materias', materiasRoutes);
 app.use('/api/tutores', tutoresRoutes);
 app.use('/api/solicitudes', solicitudesRoutes);
+app.use('/api/sesiones', sesionesRoutes);
 
 // 404 para rutas no definidas
 app.use((req, res) => {

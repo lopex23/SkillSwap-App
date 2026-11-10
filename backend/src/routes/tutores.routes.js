@@ -17,5 +17,6 @@ router.delete('/me/disponibilidad/:id', ...soloTutor, tutores.quitarDisponibilid
 // Consulta de tutores: requiere sesión (cualquier rol)
 router.get('/', requireAuth, tutores.listar);
 router.get('/:id', requireAuth, tutores.obtener);
+router.get('/:id/calificaciones', requireAuth, tutores.calificaciones);
 
 module.exports = router;

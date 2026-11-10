@@ -349,4 +349,26 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_matching_solicitud_tutor
 CREATE INDEX IF NOT EXISTS idx_sesiones_tutor_fechas
     ON sesiones_tutoria (id_tutor, fecha_inicio, fecha_fin);
 
+-- =========================================
+-- SESIONES, CALIFICACIONES Y PROGRESO
+-- =========================================
+-- Estados de sesiones_tutoria: 'programada' | 'completada' | 'cancelada'
+
+-- Una sola calificación por sesión
+CREATE UNIQUE INDEX IF NOT EXISTS uq_calificacion_sesion
+    ON calificaciones (id_sesion);
+
+-- Puntuación de 1 a 5 estrellas
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_calificaciones_puntuacion') THEN
+        ALTER TABLE calificaciones
+            ADD CONSTRAINT ck_calificaciones_puntuacion CHECK (puntuacion BETWEEN 1 AND 5);
+    END IF;
+END $$;
+
+-- Una fila de progreso por estudiante y materia (permite ON CONFLICT al completar sesiones)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_progreso_estudiante_materia
+    ON progreso_estudiante (id_estudiante, id_materia);
+
 COMMIT;
