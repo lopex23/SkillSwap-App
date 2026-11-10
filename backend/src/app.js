@@ -3,6 +3,7 @@ const healthRoutes = require('./routes/health.routes');
 const authRoutes = require('./routes/auth.routes');
 const materiasRoutes = require('./routes/materias.routes');
 const tutoresRoutes = require('./routes/tutores.routes');
+const solicitudesRoutes = require('./routes/solicitudes.routes');
 
 const app = express();
 
@@ -25,6 +26,12 @@ app.get('/', (req, res) => {
       'GET /api/tutores/:id': 'Perfil de un tutor (requiere token)',
       'GET|POST|DELETE /api/tutores/me/materias': 'Materias que enseña el tutor (tutor)',
       'GET|POST|DELETE /api/tutores/me/disponibilidad': 'Horarios del tutor (tutor)',
+      'POST /api/solicitudes': 'Pedir una tutoría; calcula tutores sugeridos (estudiante)',
+      'GET /api/solicitudes/mias?estado=': 'Mis solicitudes (estudiante)',
+      'GET /api/solicitudes/disponibles': 'Solicitudes pendientes de mis materias (tutor)',
+      'GET /api/solicitudes/:id': 'Detalle de una solicitud',
+      'PATCH /api/solicitudes/:id/cancelar': 'Cancelar una solicitud pendiente (estudiante)',
+      'POST /api/solicitudes/:id/aceptar': 'Aceptar y programar la sesión (tutor)',
     },
   });
 });
@@ -33,6 +40,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/materias', materiasRoutes);
 app.use('/api/tutores', tutoresRoutes);
+app.use('/api/solicitudes', solicitudesRoutes);
 
 // 404 para rutas no definidas
 app.use((req, res) => {

@@ -330,4 +330,23 @@ ON CONFLICT (codigo_materia) DO NOTHING;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_disponibilidad_franja
     ON disponibilidad_tutor (id_tutor, dia_semana, hora_inicio, hora_fin);
 
+-- =========================================
+-- SOLICITUDES Y MATCHING
+-- =========================================
+-- Estados de solicitudes_tutoria: 'pendiente' | 'asignada' | 'cancelada'
+-- Estados de sesiones_tutoria:    'programada' (más estados en la siguiente etapa)
+
+-- Un estudiante no puede tener dos solicitudes pendientes de la misma materia
+CREATE UNIQUE INDEX IF NOT EXISTS uq_solicitud_pendiente
+    ON solicitudes_tutoria (id_estudiante, id_materia)
+    WHERE estado = 'pendiente';
+
+-- Un tutor aparece una sola vez como sugerido por solicitud
+CREATE UNIQUE INDEX IF NOT EXISTS uq_matching_solicitud_tutor
+    ON matching_tutor (id_solicitud, id_tutor);
+
+-- Acelera la búsqueda de cruces de horario de un tutor
+CREATE INDEX IF NOT EXISTS idx_sesiones_tutor_fechas
+    ON sesiones_tutoria (id_tutor, fecha_inicio, fecha_fin);
+
 COMMIT;
