@@ -1,86 +1,133 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight, CirclePlus, ClipboardList, Clock } from 'lucide-react';
 import { api } from '../api/client';
 import { useCarga } from '../hooks/useCarga';
-import { Cargando, Estado, MensajeError, Pestanas, Vacio } from '../components/ui';
-import { formatoFechaHora } from '../utils/formato';
-
-const FILTROS = [
-  { valor: '', etiqueta: 'Todas' },
-  { valor: 'pendiente', etiqueta: 'Pendientes' },
-  { valor: 'asignada', etiqueta: 'Asignadas' },
-  { valor: 'cancelada', etiqueta: 'Canceladas' },
-];
+import { useUI } from '../context/UIContext';
+import { Avatar, EncabezadoPagina, Esqueleto, Estado, IconoArea, MensajeError, Pestanas, Vacio } from '../components/ui';
+import LineaSolicitud from '../components/LineaSolicitud';
+import { tiempoRelativo } from '../utils/formato';
 
 export default function MisSolicitudes() {
+  const { toast, confirmar } = useUI();
   const [estado, setEstado] = useState('');
-  const [errorAccion, setErrorAccion] = useState(null);
-  const { data, error, cargando, recargar } = useCarga(
-    () => api(`/solicitudes/mias${estado ? `?estado=${estado}` : ''}`),
-    [estado]
-  );
+  const { data, error, cargando, recargar } = useCarga(() => api('/solicitudes/mias'), []);
 
-  const cancelar = async (id) => {
-    if (!window.confirm('¿Cancelar esta solicitud?')) return;
-    setErrorAccion(null);
+  const todas = data?.solicitudes ?? [];
+  const filtradas = useMemo(() => (estado ? todas.filter((s) => s.estado === estado) : todas), [todas, estado]);
+  const cuenta = (e) => todas.filter((s) => s.estado === e).length;
+
+  const cancelar = async (s) => {
+    const ok = await confirmar({
+      titulo: '¿Cancelar esta solicitud?',
+      mensaje: `Dejará de estar visible para los tutores de ${s.materia.nombre_materia}.`,
+      confirmar: 'Cancelar solicitud',
+      cancelar: 'Mantener',
+      peligro: true,
+    });
+    if (!ok) return;
     try {
-      await api(`/solicitudes/${id}/cancelar`, { method: 'PATCH' });
+      await api(`/solicitudes/${s.id_solicitud}/cancelar`, { method: 'PATCH' });
+      toast.exito('Solicitud cancelada.');
       recargar();
     } catch (err) {
-      setErrorAccion(err);
+      toast.error(err.message);
     }
   };
 
   return (
     <div className="pagina">
-      <header className="pagina-cabecera con-accion">
-        <div>
-          <h1>Mis solicitudes</h1>
-          <p className="texto-suave">Sigue el estado de tus pedidos de tutoría.</p>
-        </div>
-        <Link to="/solicitudes/nueva" className="btn btn-primario">
-          Nueva solicitud
-        </Link>
-      </header>
+      <EncabezadoPagina
+        icono={ClipboardList}
+        titulo="Mis solicitudes"
+        descripcion="Sigue el estado de tus pedidos de tutoría."
+        acciones={
+          <Link to="/solicitudes/nueva" className="btn btn-primario">
+            <CirclePlus size={17} /> Nueva solicitud
+          </Link>
+        }
+      />
 
-      <Pestanas opciones={FILTROS} valor={estado} onChange={setEstado} />
-      <MensajeError error={errorAccion} />
+      <Pestanas
+        opciones={[
+          { valor: '', etiqueta: 'Todas', cuenta: todas.length },
+          { valor: 'pendiente', etiqueta: 'Pendientes', cuenta: cuenta('pendiente') },
+          { valor: 'asignada', etiqueta: 'Asignadas', cuenta: cuenta('asignada') },
+          { valor: 'cancelada', etiqueta: 'Canceladas', cuenta: cuenta('cancelada') },
+        ]}
+        valor={estado}
+        onChange={setEstado}
+      />
+
       <MensajeError error={error} onReintentar={recargar} />
-      {cargando && <Cargando />}
+      {cargando && <Esqueleto filas={3} alto={150} />}
 
-      {data && data.solicitudes.length === 0 && (
-        <Vacio titulo="No hay solicitudes aquí">
-          <Link to="/solicitudes/nueva">Pide tu primera tutoría</Link>
-        </Vacio>
+      {data && filtradas.length === 0 && (
+        <Vacio
+          icono={ClipboardList}
+          titulo={estado ? 'No hay solicitudes en esta categoría' : 'Aún no has pedido tutorías'}
+          accion={
+            <Link to="/solicitudes/nueva" className="btn btn-primario btn-sm">
+              <CirclePlus size={16} /> Pedir mi primera tutoría
+            </Link>
+          }
+        />
       )}
 
-      {data && data.solicitudes.length > 0 && (
+      {filtradas.length > 0 && (
         <ul className="lista">
-          {data.solicitudes.map((s) => (
-            <li key={s.id_solicitud} className="tarjeta item item-columna">
-              <div className="item-fila">
-                <div>
-                  <p className="item-titulo">{s.materia.nombre_materia}</p>
-                  <p className="texto-suave">Creada el {formatoFechaHora(s.fecha_solicitud)}</p>
+          {filtradas.map((s) => (
+            <li key={s.id_solicitud} className="tarjeta" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="fila-entre">
+                <div className="fila">
+                  <IconoArea codigo={s.materia.codigo_materia} />
+                  <div className="apilado">
+                    <Link to={`/solicitudes/${s.id_solicitud}`} className="titulo-item">
+                      {s.materia.nombre_materia}
+                    </Link>
+                    <span className="meta">
+                      <span>
+                        <Clock size={13} /> Enviada {tiempoRelativo(s.fecha_solicitud)}
+                      </span>
+                    </span>
+                  </div>
                 </div>
                 <Estado valor={s.estado} />
               </div>
-              <p className="item-descripcion">{s.descripcion}</p>
-              <div className="item-fila">
-                <p className="texto-suave">
-                  {s.sesion
-                    ? `Tutor: ${s.sesion.tutor}`
-                    : `${s.tutores_sugeridos.length} tutor${s.tutores_sugeridos.length === 1 ? '' : 'es'} sugerido${s.tutores_sugeridos.length === 1 ? '' : 's'}`}
-                </p>
+
+              <p className="descripcion" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {s.descripcion}
+              </p>
+
+              <LineaSolicitud solicitud={s} />
+
+              <div className="fila-entre" style={{ alignItems: 'center' }}>
+                {s.sesion ? (
+                  <span className="texto-suave">Tutor: {s.sesion.tutor}</span>
+                ) : s.tutores_sugeridos.length > 0 ? (
+                  <span className="fila">
+                    <span className="pila-avatares">
+                      {s.tutores_sugeridos.slice(0, 4).map((t) => (
+                        <Avatar key={t.id_tutor} persona={t} id={t.id_tutor} tamano="sm" />
+                      ))}
+                    </span>
+                    <span className="texto-suave">
+                      {s.tutores_sugeridos.length} tutor{s.tutores_sugeridos.length === 1 ? '' : 'es'} sugerido
+                      {s.tutores_sugeridos.length === 1 ? '' : 's'}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="texto-suave">Esperando a que un tutor agregue la materia</span>
+                )}
                 <div className="acciones">
-                  <Link to={`/solicitudes/${s.id_solicitud}`} className="btn btn-sm btn-secundario">
-                    Ver detalle
-                  </Link>
                   {s.estado === 'pendiente' && (
-                    <button type="button" className="btn btn-sm btn-peligro" onClick={() => cancelar(s.id_solicitud)}>
+                    <button type="button" className="btn btn-peligro btn-sm" onClick={() => cancelar(s)}>
                       Cancelar
                     </button>
                   )}
+                  <Link to={`/solicitudes/${s.id_solicitud}`} className="btn btn-secundario btn-sm">
+                    Ver detalle <ArrowRight size={15} />
+                  </Link>
                 </div>
               </div>
             </li>
@@ -90,4 +137,3 @@ export default function MisSolicitudes() {
     </div>
   );
 }
-

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { LogIn, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Campo, MensajeError } from '../components/ui';
+import AuthLayout, { InputPassword } from '../components/AuthLayout';
 
 export default function Login() {
   const { usuario, iniciarSesion } = useAuth();
@@ -30,35 +32,41 @@ export default function Login() {
   };
 
   return (
-    <div className="auth">
-      <form className="tarjeta auth-tarjeta" onSubmit={enviar} noValidate>
-        <h1>Iniciar sesión</h1>
-        <p className="texto-suave">Bienvenido de nuevo a SkillSwap.</p>
+    <AuthLayout
+      titulo="Qué bueno verte de nuevo"
+      puntos={['Revisa tus próximas sesiones', 'Responde solicitudes de tus materias', 'Sigue tu progreso por materia']}
+    >
+      <form className="formulario" onSubmit={enviar} noValidate>
+        <div className="apilado">
+          <h1>Iniciar sesión</h1>
+          <p className="texto-suave">
+            {location.state?.desde ? 'Inicia sesión para continuar.' : 'Ingresa con tu email y contraseña.'}
+          </p>
+        </div>
 
         <MensajeError error={error} />
 
         <Campo label="Email">
-          <input name="email" type="email" autoComplete="email" required value={form.email} onChange={cambiar} />
+          <span className="input-con-icono">
+            <Mail size={17} aria-hidden="true" />
+            <input name="email" type="email" autoComplete="email" required value={form.email} onChange={cambiar} />
+          </span>
         </Campo>
         <Campo label="Contraseña">
-          <input
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={form.password}
-            onChange={cambiar}
-          />
+          <InputPassword value={form.password} onChange={cambiar} autoComplete="current-password" />
         </Campo>
 
-        <button type="submit" className="btn btn-primario btn-bloque" disabled={enviando}>
-          {enviando ? 'Ingresando…' : 'Ingresar'}
+        <button type="submit" className="btn btn-primario btn-lg btn-bloque" disabled={enviando}>
+          <LogIn size={18} /> {enviando ? 'Ingresando…' : 'Ingresar'}
         </button>
 
         <p className="auth-pie">
-          ¿No tienes cuenta? <Link to="/registro">Regístrate</Link>
+          ¿No tienes cuenta?{' '}
+          <Link to="/registro" state={location.state}>
+            Regístrate gratis
+          </Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

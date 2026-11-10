@@ -23,7 +23,11 @@ npm run dev       # node --watch src/server.js
 npm start
 npm run db:test   # connects with DATABASE_URL, prints DB info and the tables in public, then exits
 npm run admin:create -- correo@ejemplo.com   # grants "administrador" to an already registered user
+npm run demo:crear    # resets and loads demo data (needs the backend running; goes through the API)
+npm run demo:borrar   # removes all demo data
 ```
+
+Demo accounts use the `@demo.skillswap.test` domain (`valentina`, `andres`, `camila`, `santiago`, `isabella` = tutors; `mateo`, `sofia`, `daniel`, `laura` = students; `admin`), all with the `DEMO_PASSWORD` constant in `backend/scripts/demo-datos.js`. `demo:borrar` deletes by that email domain, so never use it for real accounts.
 
 The only way to get an `administrador` is `admin:create`; the user must log in again afterwards because roles are read from the JWT, not the DB.
 
@@ -40,7 +44,11 @@ npm run build     # outputs dist/ (gitignored)
 - No CORS setup: `vite.config.js` proxies `/api` to `http://localhost:3000`, and `src/api/client.js` always calls relative `/api/...`. A production deploy needs either the same proxy or CORS on Express.
 - `src/api/client.js#api` adds the JWT (stored in `localStorage` as `skillswap_token`), throws `ApiError { status, message, errores }`, and on a 401 with a token dispatches `skillswap:logout`, which `AuthContext` listens to.
 - `AuthContext` restores the user via `/auth/me` on load; `RutaProtegida roles={[...]}` guards pages. Routes are declared in `App.jsx`; nav links per role in `components/Layout.jsx`.
-- `hooks/useCarga(fn, deps)` is the data-loading pattern (`data/error/cargando/recargar`). Shared UI bits live in `components/ui.jsx`; all styles are in `src/index.css` (color tokens on `:root`, dark mode via `prefers-color-scheme`).
+- `hooks/useCarga(fn, deps)` is the data-loading pattern (`data/error/cargando/recargar`). Shared UI bits live in `components/ui.jsx` (Avatar, TarjetaDato, FechaTile, Estrellas, Nivel, SemanaMini, Esqueleto, Vacio, Pestanas…); all styles are in `src/index.css` (color tokens on `:root`, dark mode via `prefers-color-scheme`). Icons come from `lucide-react` (v1 names, e.g. `CirclePlus`, `CircleCheck`, `ChartColumn`).
+- Feedback: use `useUI()` from `context/UIContext.jsx` — `toast.exito/error/info(msg)` for action results and `await confirmar({ titulo, mensaje, confirmar, peligro })` for destructive actions. Do not use `window.confirm`/`alert` (they also block browser automation).
+- `Layout.jsx` renders `AppShell` (fixed sidebar grouped by role, with live counters; off-canvas drawer under 960px) when logged in, and `PublicShell` (header + footer) otherwise. Add new pages' nav links in `secciones()`.
+- Academic areas are derived from the subject code prefix (`MAT-101` → Matemáticas) in `utils/areas.js` (`areaDe`, `agruparPorArea`), which also assigns each area an icon and a color tone (`.area-0` … `.area-5`).
+- `GET /api/estadisticas` (public) feeds the landing page numbers; the landing only shows figures greater than zero — never hard-code fake stats or testimonials.
 - Field errors from the API (`errores`) are shown next to inputs through `<Campo error=…>`.
 - Branding: logo assets live in `frontend/public/` (`logo-icono.png` for the navbar/hero, `favicon.png`, full `logo.png`). The navbar renders the icon as an image plus the "SkillSwap" wordmark as styled text (`.marca-skill` / `.marca-swap` gradient) so it adapts to dark mode; in dark mode the icon sits on a light tile because its navy parts disappear on dark backgrounds. The palette is derived from the logo (`--marca-*` tokens; `--primario` navy, `--acento` orange, green for success) and every text/background pair was checked for WCAG AA (≥ 4.5:1) — keep that when changing colors.
 - React Router 7 applies `navigate()` inside a transition. When a state change that affects `RutaProtegida`/redirects (login, logout) happens together with a navigation, wrap it in `startTransition` or guard the redirect (see `Layout.salir`, and the `!enviando` guards in `Login`/`Registro`), otherwise the guard's redirect wins.
