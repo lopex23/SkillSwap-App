@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-SkillSwap is a university peer-tutoring platform (upper-semester students tutor newer students). The database is **Supabase (PostgreSQL)** and the backend is **Node.js + Express** using `pg` directly (no ORM, no Supabase JS client). There is no frontend, linter, or test suite yet.
+SkillSwap is a university peer-tutoring platform (upper-semester students tutor newer students). The database is **Supabase (PostgreSQL)** and the backend is **Node.js + Express** using `pg` directly (no ORM, no Supabase JS client). The frontend is React + Vite in `frontend/`. There is no linter or automated test suite yet.
 
 - `backend/` — Express API (CommonJS)
+- `frontend/` — React SPA (ES modules) that consumes the API
 - `database/skillswap_schema_supabase.sql` — the current schema, run manually in the Supabase SQL Editor
 - `database/skillswap_schema.sql` — legacy MySQL version of the same model; not used anymore
 - `diagrams/skillswap_ERD.png.png` — ER diagram, source of truth for the model (note the doubled extension; `README.md` links to this exact filename)
@@ -27,6 +28,23 @@ npm run admin:create -- correo@ejemplo.com   # grants "administrador" to an alre
 The only way to get an `administrador` is `admin:create`; the user must log in again afterwards because roles are read from the JWT, not the DB.
 
 Configuration lives in `backend/.env` (gitignored; template in `backend/.env.example`): `DATABASE_URL`, `DATABASE_SSL` (`false` only for a local Postgres), `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`. Special characters in the DB password must be URL-encoded in `DATABASE_URL` (e.g. `#` → `%23`). Use Supabase's **Session pooler** connection string (IPv4-compatible); the direct `db.<ref>.supabase.co` host is IPv6-only.
+
+## Frontend (`frontend/`, React 19 + Vite + React Router 7, plain JS + CSS)
+
+```
+npm install
+npm run dev       # http://localhost:5173 — needs the backend running on :3000
+npm run build     # outputs dist/ (gitignored)
+```
+
+- No CORS setup: `vite.config.js` proxies `/api` to `http://localhost:3000`, and `src/api/client.js` always calls relative `/api/...`. A production deploy needs either the same proxy or CORS on Express.
+- `src/api/client.js#api` adds the JWT (stored in `localStorage` as `skillswap_token`), throws `ApiError { status, message, errores }`, and on a 401 with a token dispatches `skillswap:logout`, which `AuthContext` listens to.
+- `AuthContext` restores the user via `/auth/me` on load; `RutaProtegida roles={[...]}` guards pages. Routes are declared in `App.jsx`; nav links per role in `components/Layout.jsx`.
+- `hooks/useCarga(fn, deps)` is the data-loading pattern (`data/error/cargando/recargar`). Shared UI bits live in `components/ui.jsx`; all styles are in `src/index.css` (color tokens on `:root`, dark mode via `prefers-color-scheme`).
+- Field errors from the API (`errores`) are shown next to inputs through `<Campo error=…>`.
+- React Router 7 applies `navigate()` inside a transition. When a state change that affects `RutaProtegida`/redirects (login, logout) happens together with a navigation, wrap it in `startTransition` or guard the redirect (see `Layout.salir`, and the `!enviando` guards in `Login`/`Registro`), otherwise the guard's redirect wins.
+- Client-side search ignores accents via `utils/formato.js#normalizar`; the backend `?q=` search (ILIKE) does not.
+- Session times are entered in the browser's local time and sent as UTC ISO strings (`toISOString()`), which satisfies the backend's "ISO with timezone" rule.
 
 ## Backend architecture
 
