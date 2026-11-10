@@ -14,6 +14,7 @@ export default function Inicio() {
   return (
     <div className="inicio">
       <section className="hero">
+        <img src="/logo-icono.png" alt="" className="hero-logo" width="104" height="104" />
         <p className="hero-eyebrow">Tutorías entre estudiantes</p>
         <h1>Aprende de quienes ya pasaron por ahí</h1>
         <p className="hero-texto">
