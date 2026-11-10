@@ -205,3 +205,11 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Node.js / backend
+node_modules/
+npm-debug.log*
+# Variables de entorno (nunca subir credenciales reales)
+.env
+.env.*
+!.env.example
