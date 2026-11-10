@@ -5,6 +5,7 @@ const materiasRoutes = require('./routes/materias.routes');
 const tutoresRoutes = require('./routes/tutores.routes');
 const solicitudesRoutes = require('./routes/solicitudes.routes');
 const sesionesRoutes = require('./routes/sesiones.routes');
+const estadisticasRoutes = require('./routes/estadisticas.routes');
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
     endpoints: {
       'GET /api/health': 'Estado del servidor',
       'GET /api/health/db': 'Prueba la conexión con la base de datos',
+      'GET /api/estadisticas': 'Cifras públicas para la página de inicio',
       'POST /api/auth/register': 'Registro de usuario',
       'POST /api/auth/login': 'Inicio de sesión',
       'GET /api/auth/me': 'Usuario actual (requiere token)',
@@ -50,6 +52,7 @@ app.use('/api/materias', materiasRoutes);
 app.use('/api/tutores', tutoresRoutes);
 app.use('/api/solicitudes', solicitudesRoutes);
 app.use('/api/sesiones', sesionesRoutes);
+app.use('/api/estadisticas', estadisticasRoutes);
 
 // 404 para rutas no definidas
 app.use((req, res) => {
