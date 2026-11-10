@@ -21,7 +21,10 @@ npm install
 npm run dev       # node --watch src/server.js
 npm start
 npm run db:test   # connects with DATABASE_URL, prints DB info and the tables in public, then exits
+npm run admin:create -- correo@ejemplo.com   # grants "administrador" to an already registered user
 ```
+
+The only way to get an `administrador` is `admin:create`; the user must log in again afterwards because roles are read from the JWT, not the DB.
 
 Configuration lives in `backend/.env` (gitignored; template in `backend/.env.example`): `DATABASE_URL`, `DATABASE_SSL` (`false` only for a local Postgres), `PORT`, `JWT_SECRET`, `JWT_EXPIRES_IN`. Special characters in the DB password must be URL-encoded in `DATABASE_URL` (e.g. `#` → `%23`). Use Supabase's **Session pooler** connection string (IPv4-compatible); the direct `db.<ref>.supabase.co` host is IPv6-only.
 
@@ -31,7 +34,9 @@ Configuration lives in `backend/.env` (gitignored; template in `backend/.env.exa
 - `src/config/db.js` creates the single shared `pg` Pool and throws at require time if `DATABASE_URL` is missing. Import `{ query }` or `{ pool }` from it; always use parameterized queries (`$1`, `$2`).
 - Layering: `routes/*.routes.js` (mounted under `/api` in `app.js`) → `controllers/` (validation + HTTP) → `models/` (SQL). Express 5 forwards rejected promises from async handlers to the error handler, so handlers don't need try/catch.
 - Expected errors: `throw new HttpError(status, message, details)` (`src/utils/httpError.js`); the handler in `app.js` returns `{ status: 'error', message, errores }`. Any other error (no status, or ≥500) is logged and returned as a generic 500 without details.
-- Multi-table writes use a transaction on a client from `db.pool.connect()` (see `usuario.model.js#crear`); Postgres error `23505` (unique violation) is mapped to 409.
+- Multi-table writes use a transaction on a client from `db.pool.connect()` (see `usuario.model.js#crear`). Models map Postgres errors to HTTP: `23505` (unique violation) and `23503` (FK in use on delete) → 409.
+- Shared input helpers in `src/utils/validators.js`: `texto`, `parseId` (400 on non-positive-integer ids), `assertSinErrores` (400 with per-field `errores`).
+- In routers, register literal paths (e.g. `/me/...`) before `/:id` so they aren't captured as ids.
 
 ## Auth
 
@@ -39,11 +44,18 @@ Configuration lives in `backend/.env` (gitignored; template in `backend/.env.exa
 - Protect routes with `requireAuth` (sets `req.user = { id, roles }`) and `requireRole(...)` from `src/middlewares/auth.middleware.js`.
 - Registering creates rows in `usuarios`, `usuario_rol` and the matching subtype table (`estudiantes`/`tutores`) atomically. Only `estudiante` and `tutor` are self-assignable; `administrador` is not.
 - Emails are stored lowercase and unique case-insensitively (`uq_usuarios_email_lower`). Never return `password_hash` — use `Usuario.sinPassword`.
-- Routes: `GET /api/health`, `GET /api/health/db` (503 if the DB is unreachable).
+
+## API resources
+
+- `GET /` lists the endpoints — keep it in sync in `app.js` when adding routes. `GET /api/health`, `GET /api/health/db` (503 if the DB is unreachable).
+- `/api/materias`: reads are public (`?q=` searches name or code); create/update/delete require `administrador`. Codes are stored uppercase and unique.
+- `/api/tutores`: listing (`?materia=ID`) and profiles require any logged-in user and never expose email. `/api/tutores/me/materias` and `/api/tutores/me/disponibilidad` require role `tutor` and act on `req.user.id`.
+- A tutor's subjects live in `usuario_materia` (keyed by `id_usuario`, which equals `id_tutor`); `nivel` is `básico|intermedio|avanzado`. Posting an existing subject updates its level (upsert).
+- Availability: `dia_semana` is stored as lowercase Spanish with accents (`Tutor.DIAS`; input accepted with or without accents), times as `HH:MM`. Overlapping slots on the same day are rejected with 409; adjacent ones are allowed.
 
 ## Database schema
 
-The schema script is idempotent (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`) and wrapped in a transaction; it also seeds the base roles (`estudiante`, `tutor`, `administrador`). There is no migration tool: add changes to this same file in an idempotent way and re-run the whole script (Supabase SQL Editor, or via `pg` with `DATABASE_URL`).
+The schema script is idempotent (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`) and wrapped in a transaction; it also seeds the base roles (`estudiante`, `tutor`, `administrador`) and 23 sample subjects from several degree programs. There is no migration tool: add changes to this same file in an idempotent way and re-run the whole script (Supabase SQL Editor, or via `pg` with `DATABASE_URL`).
 
 - **RLS is enabled on every table with no policies.** This blocks Supabase's public REST API (anon key) from reading tables like `usuarios.password_hash`. The backend connects as `postgres` (table owner) so it bypasses RLS. Any new table must also get `ENABLE ROW LEVEL SECURITY`.
 - PostgreSQL does not auto-index foreign keys; the script creates an index for each FK column not already covered by a PK. Do the same for new FKs.

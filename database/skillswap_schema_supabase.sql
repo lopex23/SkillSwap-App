@@ -283,4 +283,51 @@ INSERT INTO roles (nombre_rol) VALUES
     ('administrador')
 ON CONFLICT (nombre_rol) DO NOTHING;
 
+-- =========================================
+-- MATERIAS
+-- =========================================
+-- Código de materia único (el backend lo guarda en mayúsculas)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_materias_codigo ON materias (codigo_materia);
+
+-- Materias de ejemplo de distintas carreras
+INSERT INTO materias (codigo_materia, nombre_materia) VALUES
+    -- Ciencias básicas e ingeniería
+    ('MAT-101', 'Cálculo Diferencial'),
+    ('MAT-102', 'Álgebra Lineal'),
+    ('FIS-101', 'Física Mecánica'),
+    ('ING-101', 'Programación I'),
+    ('ING-201', 'Estructuras de Datos'),
+    -- Administración, economía y contaduría
+    ('ADM-101', 'Fundamentos de Administración'),
+    ('ECO-101', 'Microeconomía'),
+    ('CON-101', 'Contabilidad General'),
+    ('FIN-101', 'Matemáticas Financieras'),
+    ('EST-101', 'Estadística Descriptiva'),
+    -- Derecho
+    ('DER-101', 'Introducción al Derecho'),
+    ('DER-201', 'Derecho Constitucional'),
+    -- Psicología
+    ('PSI-101', 'Psicología General'),
+    ('PSI-201', 'Psicología del Desarrollo'),
+    -- Ciencias de la salud
+    ('SAL-101', 'Anatomía Humana'),
+    ('SAL-102', 'Bioquímica'),
+    -- Comunicación
+    ('COM-101', 'Expresión Oral y Escrita'),
+    ('COM-201', 'Teoría de la Comunicación'),
+    -- Educación
+    ('EDU-101', 'Pedagogía y Didáctica'),
+    -- Diseño y arquitectura
+    ('DIS-101', 'Dibujo Técnico'),
+    -- Idiomas
+    ('IDI-101', 'Inglés I'),
+    ('IDI-102', 'Inglés II'),
+    -- Transversales
+    ('INV-101', 'Metodología de la Investigación')
+ON CONFLICT (codigo_materia) DO NOTHING;
+
+-- Un tutor no puede tener dos franjas idénticas el mismo día
+CREATE UNIQUE INDEX IF NOT EXISTS uq_disponibilidad_franja
+    ON disponibilidad_tutor (id_tutor, dia_semana, hora_inicio, hora_fin);
+
 COMMIT;
