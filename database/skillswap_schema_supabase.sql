@@ -267,4 +267,20 @@ ALTER TABLE reportes              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE log_sistema           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE configuraciones       ENABLE ROW LEVEL SECURITY;
 
+-- =========================================
+-- AUTENTICACIÓN
+-- =========================================
+-- Email único sin distinguir mayúsculas/minúsculas (el backend además lo guarda en minúsculas)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_usuarios_email_lower ON usuarios (lower(email));
+
+-- Nombre de rol único, necesario para el ON CONFLICT de abajo
+CREATE UNIQUE INDEX IF NOT EXISTS uq_roles_nombre ON roles (nombre_rol);
+
+-- Roles base del sistema
+INSERT INTO roles (nombre_rol) VALUES
+    ('estudiante'),
+    ('tutor'),
+    ('administrador')
+ON CONFLICT (nombre_rol) DO NOTHING;
+
 COMMIT;
